@@ -7,12 +7,17 @@
  * @copyright   Copyright (c) Alex Bilbie
  * @license     http://mit-license.org/
  * @link        https://github.com/thephpleague/oauth2-server
+ *
+ * Additions/Modifications by Matthew Guillot
+ * revokeAccessToken - *Made to be RFC 7009 Compliant*
  */
 
 namespace League\OAuth2\Server;
 
 use League\OAuth2\Server\Grant\GrantTypeInterface;
 use League\OAuth2\Server\TokenType\Bearer;
+use League\OAuth2\Server\Exception;
+use Illuminate\Support\Facades\Request;
 
 /**
  * OAuth 2.0 authorization server class
@@ -273,6 +278,39 @@ class AuthorizationServer extends AbstractServer
 
         // Complete the flow
         return $this->getGrantType($grantType)->completeFlow();
+    }
+
+    /**
+     * Revoke a access token
+     *
+     * @return array request response
+     *
+     * @throws
+     */
+    public function revokeAccessToken()
+    {
+        $grantType = $this->getRequest()->request->get('grant_type') ? $this->getRequest()->request->get('grant_type') : 'password';
+        $token = $this->getRequest()->request->get('token');
+        if (is_null($token)) {
+            throw new Exception\InvalidRequestException('token');
+        }
+        $token_type_hint = $this->getRequest()->request->get('token_type_hint');
+        if (! is_null($token_type_hint) && $token_type_hint == 'refresh_token') {
+            $authorization = ! empty(Request::header()['authorization'][0]) ? str_replace('Bearer ','', Request::header()['authorization'][0]) : null;
+            if (is_null($authorization)) {
+                throw new Exception\InvalidRequestException('access_token');
+            }
+        }
+        // Ensure grant type is one that is recognised and is enabled
+        if (!in_array($grantType, array_keys($this->grantTypes))) {
+            throw new Exception\UnsupportedGrantTypeException($grantType);
+        }
+        if ($grantType != 'password' && $grantType != 'refresh_token') {
+            throw new Exception\UnsupportedRevokeTypeException;
+        }
+        // Complete the flow
+
+        return $this->getGrantType($grantType)->revokeFlow();
     }
 
     /**

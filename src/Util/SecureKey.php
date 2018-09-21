@@ -28,7 +28,7 @@ class SecureKey
      *
      * @return string
      */
-    public static function generate($len = 40)
+    public static function generate($len = 255)
     {
         return self::getAlgorithm()->generate($len);
     }
