@@ -4,7 +4,7 @@
 	"homepage": "http://oauth2.thephpleague.com/",
 	"license": "MIT",
 	"require": {
-		"php": "^7.3.0",
+		"php": "^7.3.0|^8.2",
 		"symfony/http-foundation": "~2.4|~3.0|~4.0|~5.0",
 		"league/event": "^2.1"
 	},
